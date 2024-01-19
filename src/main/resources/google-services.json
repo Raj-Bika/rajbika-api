@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "548607642026",
+    "firebase_url": "https://rajbika-store.firebaseio.com",
+    "project_id": "rajbika-store",
+    "storage_bucket": "rajbika-store.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:548607642026:android:de04668603dfa2e98103d3",
+        "android_client_info": {
+          "package_name": "com.svvgindustries.rajbika"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "548607642026-8kt4s6o98q538j7r0cpffpomaan4oiti.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.svvgindustries.rajbika",
+            "certificate_hash": "021931a817369c003a0afecaf3d9c07e38f1efa1"
+          }
+        },
+        {
+          "client_id": "548607642026-d27r46h9g1q4vnrbck9dp8s8m926qs89.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAeZdyrQAdD4OyisJVGxKR3FMDFTX9TcvM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "548607642026-d27r46h9g1q4vnrbck9dp8s8m926qs89.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
