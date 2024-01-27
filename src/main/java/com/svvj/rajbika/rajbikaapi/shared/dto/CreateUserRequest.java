@@ -26,4 +26,6 @@ public class CreateUserRequest {
     @Pattern(regexp = "^\\d{10}$", message = "Not a valid phone number")
     @NotEmpty(message = "Phone Number is required")
     private String phoneNumber;
+
+    private String password;
 }
