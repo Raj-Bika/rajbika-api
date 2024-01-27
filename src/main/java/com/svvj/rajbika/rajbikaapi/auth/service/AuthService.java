@@ -4,59 +4,57 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.UserRecord;
 import com.svvj.rajbika.rajbikaapi.auth.dto.SignupRequest;
+import com.svvj.rajbika.rajbikaapi.auth.model.Role;
+import com.svvj.rajbika.rajbikaapi.security.service.JwtService;
 import com.svvj.rajbika.rajbikaapi.shared.dto.CreateUserRequest;
+import com.svvj.rajbika.rajbikaapi.users.model.User;
 import com.svvj.rajbika.rajbikaapi.users.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.ResponseEntity;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthService {
 
-//    private final RestTemplate restTemplate;
-//    private static final String USER_SERVICE_URL = "http://localhost:8082/api/v1/users";
-
     private final UserService userService;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
-    public UserRecord signUpInFirebase(SignupRequest signupRequest) throws FirebaseAuthException {
-        UserRecord userRecord = createUserInFirebaseAuth(signupRequest.getEmail(), signupRequest.getPassword());
-        return userRecord;
+    public User createUser(SignupRequest signupRequest) throws Exception {
+        if (this.emailAlreadyExists(signupRequest.getEmail())) {
+            throw new Exception("Email Already in use");
+        }
+        return saveUserInDB(signupRequest);
     }
 
-    public ResponseEntity<String> saveUserInDB(SignupRequest signupRequest) {
+    public boolean emailAlreadyExists(String email) {
+        return this.userService.emailAlreadyExists(email);
+    }
+
+
+    public User saveUserInDB(SignupRequest signupRequest) {
         CreateUserRequest createUserRequest = CreateUserRequest.builder()
                 .email(signupRequest.getEmail())
                 .firstName(signupRequest.getFirstName())
                 .lastName(signupRequest.getLastName())
                 .phoneNumber(signupRequest.getPhoneNumber())
+                .password(passwordEncoder.encode(signupRequest.getPassword()))
                 .build();
-//        ResponseEntity<String> responseEntity = restTemplate.postForEntity(USER_SERVICE_URL, createUserRequest, String.class);
-//        return responseEntity;
-
-       try {
-           this.userService.createUser(createUserRequest);
-           return  new ResponseEntity<>(HttpStatus.CREATED);
-       }
-       catch (Exception e) {
-            return  new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-       }
+        User user = userService.createUser(createUserRequest);
+        return user;
     }
 
-
-
-    private UserRecord createUserInFirebaseAuth(String email, String password) throws FirebaseAuthException {
-        UserRecord.CreateRequest request = new UserRecord.CreateRequest()
-                .setEmail(email)
-                .setPassword(password);
-
-        return FirebaseAuth.getInstance().createUser(request);
+    public String getToken(User user) {
+        return this.jwtService.generateToken(user);
     }
-    public void deleteFirebaseUser(String verificationId) {
-        // Delete the Firebase user by verification ID
-        // ...
+
+    public User getUserByEmail(String email){
+        return userService.loadUserByUsername(email);
     }
 }

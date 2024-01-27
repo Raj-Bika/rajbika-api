@@ -1,7 +1,6 @@
 package com.svvj.rajbika.rajbikaapi.users.service;
 
 
-
 import com.svvj.rajbika.rajbikaapi.shared.dto.CreateUserRequest;
 import com.svvj.rajbika.rajbikaapi.usercart.service.UserCartService;
 import com.svvj.rajbika.rajbikaapi.users.dto.CreateUserAddressRequest;
@@ -13,10 +12,10 @@ import com.svvj.rajbika.rajbikaapi.users.repository.UserRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,37 +25,24 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class UserService {
+public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
     private final UserCartService userCartService;
 
-//    private final RestTemplate restTemplate;
-    private static final String CART_SERVICE_URL = "http://localhost:8088/api/v1/users/{user-id}/cart";
 
-    public void createUser(@Valid CreateUserRequest userRequest) throws Exception {
+    public User createUser(@Valid CreateUserRequest userRequest) {
         User user = User.builder()
                 .email(userRequest.getEmail())
                 .firstName(userRequest.getFirstName())
                 .lastName(userRequest.getLastName())
                 .phoneNumber(userRequest.getPhoneNumber())
+                .password(userRequest.getPassword())
                 .build();
-//        Cart cart = Cart.builder().userId(user.getId()).build();
-//        cartRepository.save(cart);
-//
         this.userRepository.save(user);
-
-//        ResponseEntity<String> responseEntity = restTemplate.postForEntity(CART_SERVICE_URL, null, String.class, user.getId());
-//        if(!responseEntity.getStatusCode().isSameCodeAs(HttpStatus.CREATED)) {
-//            throw new Exception("Cart could not be created for the user! Please try again");
-//        }
-
         this.userCartService.createUserCart(user.getId());
-
-
-
-
         log.info("User {} saved successfully", user.getId());
+        return user;
     }
 
     public List<UserResponse> getAllUsers() {
@@ -78,7 +64,7 @@ public class UserService {
 
     public Boolean createAddressForUser(String userId, CreateUserAddressRequest createUserAddressRequest) {
         Optional<User> optionalUser = userRepository.findById(userId);
-        if(optionalUser.isPresent()) {
+        if (optionalUser.isPresent()) {
             User user = optionalUser.get();
             Address address = Address.builder()
                     .id(UUID.randomUUID().toString())
@@ -88,9 +74,9 @@ public class UserService {
                     .state(createUserAddressRequest.getState())
                     .pinCode(createUserAddressRequest.getPinCode())
                     .build();
-            if(user.getAddressList() != null && user.getAddressList().stream().toArray().length > 0) {
+            if (user.getAddressList() != null && user.getAddressList().stream().toArray().length > 0) {
                 user.getAddressList().add(address);
-            }else {
+            } else {
                 List<Address> newAddressList = new ArrayList<>();
                 newAddressList.add(address);
                 user.setAddressList(newAddressList);
@@ -120,7 +106,19 @@ public class UserService {
         return userAddressListResponse;
     }
 
-    public String createUserWithPhoneNumber(String phoneNumber)  {
+    public String createUserWithPhoneNumber(String phoneNumber) {
         return "";
+    }
+
+    public boolean emailAlreadyExists(String email) {
+        Optional<User> user = this.userRepository.findByEmail(email);
+        return user.isPresent();
+    }
+
+    @Override
+    public User loadUserByUsername(String username) throws UsernameNotFoundException {
+        Optional<User> user = this.userRepository.findByEmail(username);
+        if (user.isEmpty()) throw new UsernameNotFoundException("Email Not Found");
+        return user.get();
     }
 }
